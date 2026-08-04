@@ -1,16 +1,18 @@
 @import "tailwindcss";
 
+/* Sampled from the Lynch Heating & Cooling logo: #78c8f0 (wave highlight),
+   #2878c8 (wave mid / "Cooling" wordmark), #203058 (wave base / "Lynch" wordmark). */
 @theme {
   --color-brand-50: #eef6fc;
-  --color-brand-100: #d5e9f6;
-  --color-brand-200: #abd3ed;
-  --color-brand-300: #7bb8e0;
-  --color-brand-400: #4a9bd1;
-  --color-brand-500: #1b6ca8;
-  --color-brand-600: #0f4c81;
-  --color-brand-700: #0c3d68;
-  --color-brand-800: #0a3153;
-  --color-brand-900: #082641;
+  --color-brand-100: #d6ebf9;
+  --color-brand-200: #a9d8f3;
+  --color-brand-300: #78c8f0;
+  --color-brand-400: #4aa3e0;
+  --color-brand-500: #2878c8;
+  --color-brand-600: #1f5fa0;
+  --color-brand-700: #203058;
+  --color-brand-800: #172446;
+  --color-brand-900: #0f1830;
 }
 
 html,

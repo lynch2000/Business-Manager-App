@@ -18,7 +18,7 @@ export function useBusinessSettings() {
     } else if (!error && !data) {
       const { data: created } = await supabase
         .from('business_settings')
-        .insert({ user_id: user.id })
+        .insert({ user_id: user.id, business_name: 'Lynch Heating & Cooling' })
         .select('*')
         .single()
       setSettings(created as BusinessSettings)

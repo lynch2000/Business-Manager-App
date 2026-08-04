@@ -3,6 +3,7 @@ import { Navigate } from 'react-router'
 import { useAuth } from '../context/AuthContext'
 import { Button, Field, Input } from '../components/ui'
 import { isSupabaseConfigured } from '../lib/supabase'
+import logoWordmark from '../assets/logo-wordmark.png'
 
 export default function Login() {
   const { session, signIn, signUp } = useAuth()
@@ -33,8 +34,7 @@ export default function Login() {
   return (
     <div className="flex min-h-full flex-col items-center justify-center px-6">
       <div className="mb-8 flex flex-col items-center gap-3">
-        <img src="/icons/icon-192.png" alt="" className="h-16 w-16 rounded-2xl shadow" />
-        <h1 className="text-lg font-semibold text-slate-900">HVAC Business Manager</h1>
+        <img src={logoWordmark} alt="Lynch Heating & Cooling" className="h-14 w-auto" />
       </div>
 
       {!isSupabaseConfigured && (

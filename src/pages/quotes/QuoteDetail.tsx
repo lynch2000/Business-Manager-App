@@ -38,7 +38,7 @@ export default function QuoteDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  function buildPdf() {
+  async function buildPdf() {
     if (!quote || !customer || !settings) return null
     return buildDocumentPdf({
       kind: 'Quote',
@@ -59,14 +59,14 @@ export default function QuoteDetail() {
     })
   }
 
-  function handleDownload() {
-    const doc = buildPdf()
+  async function handleDownload() {
+    const doc = await buildPdf()
     doc?.save(`${quote?.quote_number}.pdf`)
   }
 
   async function handleSend() {
     if (!quote || !customer) return
-    const doc = buildPdf()
+    const doc = await buildPdf()
     if (!doc) return
     setSending(true)
     setSendMsg(null)

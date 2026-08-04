@@ -1,6 +1,9 @@
 import { jsPDF } from 'jspdf'
 import type { BusinessSettings, Customer, LineItem } from '../types'
 import { formatCurrency, formatDate } from './currency'
+import defaultLogoUrl from '../assets/logo-wordmark.png'
+
+const BRAND_NAVY = '#203058'
 
 interface DocumentPdfInput {
   kind: 'Quote' | 'Invoice'
@@ -21,26 +24,44 @@ interface DocumentPdfInput {
   settings: BusinessSettings
 }
 
-export function buildDocumentPdf(input: DocumentPdfInput): jsPDF {
+function loadImage(url: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => resolve(null)
+    img.src = url
+  })
+}
+
+export async function buildDocumentPdf(input: DocumentPdfInput): Promise<jsPDF> {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   const margin = 48
   const pageWidth = doc.internal.pageSize.getWidth()
   let y = margin
 
+  const logo = await loadImage(input.settings.logo_url || defaultLogoUrl)
+
+  if (logo) {
+    const logoHeight = 34
+    const logoWidth = logoHeight * (logo.naturalWidth / logo.naturalHeight)
+    doc.addImage(logo, margin, y - 6, logoWidth, logoHeight)
+  }
+
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(20)
-  doc.setTextColor('#0f4c81')
-  doc.text(input.kind.toUpperCase(), margin, y)
+  doc.setFontSize(16)
+  doc.setTextColor(BRAND_NAVY)
+  doc.text(input.kind.toUpperCase(), pageWidth - margin, y, { align: 'right' })
 
   doc.setFontSize(11)
   doc.setTextColor('#334155')
   doc.setFont('helvetica', 'normal')
-  doc.text(`${input.number}`, pageWidth - margin, y - 6, { align: 'right' })
-  doc.text(`Status: ${input.status}`, pageWidth - margin, y + 10, { align: 'right' })
-  y += 34
+  doc.text(`${input.number}`, pageWidth - margin, y + 16, { align: 'right' })
+  doc.text(`Status: ${input.status}`, pageWidth - margin, y + 30, { align: 'right' })
+  y += 48
 
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(13)
+  doc.setFontSize(11)
   doc.setTextColor('#0f172a')
   doc.text(input.settings.business_name || 'Your Business', margin, y)
   doc.setFont('helvetica', 'normal')
@@ -53,7 +74,7 @@ export function buildDocumentPdf(input: DocumentPdfInput): jsPDF {
     y += 13
   }
 
-  let yRight = margin + 34
+  let yRight = margin + 48
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.setTextColor('#0f172a')

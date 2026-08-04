@@ -44,7 +44,7 @@ export default function InvoiceDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  function buildPdf() {
+  async function buildPdf() {
     if (!invoice || !customer || !settings) return null
     return buildDocumentPdf({
       kind: 'Invoice',
@@ -66,14 +66,14 @@ export default function InvoiceDetail() {
     })
   }
 
-  function handleDownload() {
-    const doc = buildPdf()
+  async function handleDownload() {
+    const doc = await buildPdf()
     doc?.save(`${invoice?.invoice_number}.pdf`)
   }
 
   async function handleSend() {
     if (!invoice || !customer) return
-    const doc = buildPdf()
+    const doc = await buildPdf()
     if (!doc) return
     setSending(true)
     setSendMsg(null)
