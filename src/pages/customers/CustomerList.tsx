@@ -48,7 +48,7 @@ export default function CustomerList() {
         <div className="space-y-2">
           {filtered.map((c) => (
             <Link key={c.id} to={`/customers/${c.id}`}>
-              <Card className="flex items-center justify-between">
+              <Card interactive className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-slate-900">{c.name}</p>
                   <p className="text-sm text-slate-500">{c.phone || c.email || 'No contact info'}</p>

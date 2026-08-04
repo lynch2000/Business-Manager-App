@@ -78,7 +78,7 @@ export default function ExpenseList() {
         <div className="space-y-2">
           {expenses.map((e) => (
             <Link key={e.id} to={`/expenses/${e.id}`}>
-              <Card className="flex items-center gap-3">
+              <Card interactive className="flex items-center gap-3">
                 {e.receipt_path && thumbnails[e.receipt_path] ? (
                   <img src={thumbnails[e.receipt_path]} alt="" className="h-12 w-12 rounded-lg object-cover" />
                 ) : (

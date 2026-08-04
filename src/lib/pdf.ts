@@ -1,4 +1,4 @@
-import { jsPDF } from 'jspdf'
+import type { jsPDF as JsPDF } from 'jspdf'
 import type { BusinessSettings, Customer, LineItem } from '../types'
 import { formatCurrency, formatDate } from './currency'
 import defaultLogoUrl from '../assets/logo-wordmark.png'
@@ -34,7 +34,11 @@ function loadImage(url: string): Promise<HTMLImageElement | null> {
   })
 }
 
-export async function buildDocumentPdf(input: DocumentPdfInput): Promise<jsPDF> {
+export async function buildDocumentPdf(input: DocumentPdfInput): Promise<JsPDF> {
+  // Loaded on demand — jsPDF (+ its html2canvas/dompurify dependencies) is
+  // ~380KB and only ever needed when a PDF is actually generated, so it
+  // shouldn't sit in the main bundle every user downloads on first load.
+  const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   const margin = 48
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -211,6 +215,6 @@ export async function buildDocumentPdf(input: DocumentPdfInput): Promise<jsPDF> 
   return doc
 }
 
-export function pdfToBase64(doc: jsPDF): string {
+export function pdfToBase64(doc: JsPDF): string {
   return doc.output('datauristring').split(',')[1]
 }

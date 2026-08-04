@@ -60,8 +60,10 @@ export default function Dashboard() {
         <>
           <div className="mb-4 grid grid-cols-2 gap-3">
             <Link to="/accounts">
-              <Card className="flex items-center gap-3">
-                <AccountsIcon width={22} height={22} className="text-brand-600 shrink-0" />
+              <Card interactive className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                  <AccountsIcon width={20} height={20} />
+                </span>
                 <div>
                   <p className="text-sm text-slate-500">Outstanding</p>
                   <p className="text-lg font-semibold text-slate-900">{formatCurrency(totalOwed)}</p>
@@ -69,8 +71,10 @@ export default function Dashboard() {
               </Card>
             </Link>
             <Link to="/expenses">
-              <Card className="flex items-center gap-3">
-                <ReceiptIcon width={22} height={22} className="text-brand-600 shrink-0" />
+              <Card interactive className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                  <ReceiptIcon width={20} height={20} />
+                </span>
                 <div>
                   <p className="text-sm text-slate-500">Expenses (mth)</p>
                   <p className="text-lg font-semibold text-slate-900">{formatCurrency(monthExpenseTotal)}</p>

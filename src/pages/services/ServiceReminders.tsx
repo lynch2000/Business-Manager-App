@@ -53,7 +53,7 @@ export default function ServiceReminders() {
             const status = dueStatus(r.next_due_date)
             return (
               <Link key={r.id} to={`/customers/${r.customer_id}`}>
-                <Card className="flex items-center justify-between">
+                <Card interactive className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-slate-900">{r.customer?.name}</p>
                     <p className="text-sm text-slate-500">{r.service_type}{r.equipment ? ` · ${r.equipment}` : ''}</p>

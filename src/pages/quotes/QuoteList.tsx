@@ -44,7 +44,7 @@ export default function QuoteList() {
         <div className="space-y-2">
           {quotes.map((q) => (
             <Link key={q.id} to={`/quotes/${q.id}`}>
-              <Card className="flex items-center justify-between">
+              <Card interactive className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-slate-900">{q.quote_number}</p>
                   <p className="text-sm text-slate-500">{q.customer?.name} · {formatDate(q.issue_date)}</p>

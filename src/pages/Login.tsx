@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router'
 import { useAuth } from '../context/AuthContext'
-import { Button, Field, Input, Spinner } from '../components/ui'
+import { Button, Card, Field, Input, Spinner } from '../components/ui'
 import { apiJson } from '../lib/api'
 import logoWordmark from '../assets/logo-wordmark.png'
 
@@ -31,7 +31,7 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center px-6">
+    <div className="flex min-h-full flex-col items-center justify-center bg-gradient-to-b from-brand-50/60 via-white to-white px-6">
       <div className="mb-8 flex flex-col items-center gap-3">
         <img src={logoWordmark} alt="Lynch Heating & Cooling" className="h-14 w-auto" />
       </div>
@@ -39,14 +39,14 @@ export default function Login() {
       {needsSetup === null ? (
         <Spinner />
       ) : (
-        <>
+        <Card className="w-full max-w-sm rounded-3xl p-6">
           {needsSetup && (
-            <div className="mb-4 w-full max-w-sm rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">
+            <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">
               First time here — set up your account to get started.
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Field label="Email">
               <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
             </Field>
@@ -67,7 +67,7 @@ export default function Login() {
               {busy ? 'Please wait…' : needsSetup ? 'Create account' : 'Sign in'}
             </Button>
           </form>
-        </>
+        </Card>
       )}
     </div>
   )

@@ -19,15 +19,20 @@ export default function More() {
       <div className="space-y-2">
         {items.map(({ to, label, icon: Icon }) => (
           <Link key={to} to={to}>
-            <Card className="flex items-center gap-3">
-              <Icon width={20} height={20} className="text-brand-600" />
-              <span className="font-medium text-slate-800">{label}</span>
+            <Card interactive className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                <Icon width={18} height={18} />
+              </span>
+              <span className="flex-1 font-medium text-slate-800">{label}</span>
+              <span className="text-slate-300">›</span>
             </Card>
           </Link>
         ))}
         <button className="w-full text-left" onClick={() => signOut()}>
-          <Card className="flex items-center gap-3">
-            <LogoutIcon width={20} height={20} className="text-slate-500" />
+          <Card interactive className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+              <LogoutIcon width={18} height={18} />
+            </span>
             <span className="font-medium text-slate-800">Sign out</span>
           </Card>
         </button>

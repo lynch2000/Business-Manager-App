@@ -44,7 +44,7 @@ export default function InvoiceList() {
         <div className="space-y-2">
           {invoices.map((inv) => (
             <Link key={inv.id} to={`/invoices/${inv.id}`}>
-              <Card className="flex items-center justify-between">
+              <Card interactive className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-slate-900">{inv.invoice_number}</p>
                   <p className="text-sm text-slate-500">
