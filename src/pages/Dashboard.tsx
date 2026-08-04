@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/db'
 import { useAuth } from '../context/AuthContext'
 import type { Expense, Invoice, ServiceRecord } from '../types'
 import { Card, PageHeader, Spinner, StatusBadge } from '../components/ui'
@@ -23,19 +23,19 @@ export default function Dashboard() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
 
     Promise.all([
-      supabase
+      db
         .from('invoices')
         .select('*, customer:customers(*)')
         .eq('user_id', user.id)
         .in('status', ['sent', 'partially_paid', 'overdue', 'draft'])
         .order('due_date'),
-      supabase
+      db
         .from('service_records')
         .select('*, customer:customers(*)')
         .eq('user_id', user.id)
         .lte('next_due_date', in30Days.toISOString().slice(0, 10))
         .order('next_due_date'),
-      supabase
+      db
         .from('expenses')
         .select('amount')
         .eq('user_id', user.id)

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { apiFetch } from './api'
 import type { ExpenseCategory } from '../types'
 
 export interface ScannedReceipt {
@@ -11,12 +11,16 @@ export interface ScannedReceipt {
 }
 
 /**
- * Sends a receipt photo to the `parse-receipt` edge function for automatic
- * field extraction. Throws if the function isn't deployed/configured —
- * callers should fall back to a blank, manually-filled form.
+ * Sends a receipt photo to the `/api/parse-receipt` Pages Function for
+ * automatic field extraction. Throws if it isn't configured — callers
+ * should fall back to a blank, manually-filled form.
  */
 export async function scanReceipt(base64: string, mimeType: string): Promise<ScannedReceipt> {
-  const { data, error } = await supabase.functions.invoke('parse-receipt', { body: { imageBase64: base64, mimeType } })
-  if (error) throw error
-  return data as ScannedReceipt
+  const res = await apiFetch('/api/parse-receipt', {
+    method: 'POST',
+    body: JSON.stringify({ imageBase64: base64, mimeType }),
+  })
+  const body = await res.json().catch(() => null)
+  if (!res.ok) throw new Error((body as { error?: string })?.error ?? 'Failed to scan receipt')
+  return body as ScannedReceipt
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
 import { useAuth } from '../../context/AuthContext'
 import type { Customer } from '../../types'
 import { Button, Field, Input, PageHeader, Spinner, Textarea } from '../../components/ui'
@@ -29,7 +29,7 @@ export default function CustomerForm() {
 
   useEffect(() => {
     if (!id) return
-    supabase
+    db
       .from('customers')
       .select('*')
       .eq('id', id)
@@ -62,11 +62,11 @@ export default function CustomerForm() {
     if (!user) return
     setSaving(true)
     if (isEdit) {
-      const { error } = await supabase.from('customers').update(form).eq('id', id)
+      const { error } = await db.from('customers').update(form).eq('id', id)
       setSaving(false)
       if (!error) navigate(`/customers/${id}`)
     } else {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('customers')
         .insert({ ...form, user_id: user.id })
         .select('id')

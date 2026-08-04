@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
+import { nextDocumentNumber } from '../../lib/documentNumber'
 import { useAuth } from '../../context/AuthContext'
 import { useBusinessSettings } from '../../hooks/useBusinessSettings'
 import type { Invoice, InvoiceItem } from '../../types'
@@ -40,8 +41,8 @@ export default function InvoiceForm() {
   useEffect(() => {
     if (!id) return
     Promise.all([
-      supabase.from('invoices').select('*').eq('id', id).single(),
-      supabase.from('invoice_items').select('*').eq('invoice_id', id).order('sort_order'),
+      db.from('invoices').select('*').eq('id', id).single(),
+      db.from('invoice_items').select('*').eq('invoice_id', id).order('sort_order'),
     ]).then(([inv, i]) => {
       const invoice = inv.data as Invoice
       if (invoice) {
@@ -83,11 +84,11 @@ export default function InvoiceForm() {
     let invoiceId = id
 
     if (isEdit) {
-      await supabase.from('invoices').update(payload).eq('id', id)
-      await supabase.from('invoice_items').delete().eq('invoice_id', id)
+      await db.from('invoices').update(payload).eq('id', id)
+      await db.from('invoice_items').delete().eq('invoice_id', id)
     } else {
-      const { data: numberData } = await supabase.rpc('next_document_number', { p_doc_type: 'invoice' })
-      const { data, error } = await supabase
+      const numberData = await nextDocumentNumber('invoice')
+      const { data, error } = await db
         .from('invoices')
         .insert({ ...payload, user_id: user.id, invoice_number: numberData ?? `INV-${Date.now()}` })
         .select('id')
@@ -110,7 +111,7 @@ export default function InvoiceForm() {
         sort_order: index,
       }))
 
-    if (itemRows.length) await supabase.from('invoice_items').insert(itemRows)
+    if (itemRows.length) await db.from('invoice_items').insert(itemRows)
 
     setSaving(false)
     navigate(`/invoices/${invoiceId}`)

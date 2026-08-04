@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
 import { useAuth } from '../../context/AuthContext'
 import { Button, Field, Input, PageHeader, Select, Textarea } from '../../components/ui'
 import { BackIcon } from '../../components/Icons'
@@ -27,7 +27,7 @@ export default function ServiceForm() {
     const nextDue = new Date(serviceDate)
     nextDue.setMonth(nextDue.getMonth() + intervalMonths)
 
-    const { error } = await supabase.from('service_records').insert({
+    const { error } = await db.from('service_records').insert({
       user_id: user.id,
       customer_id: customerId,
       service_type: serviceType,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
 import type { Customer, Invoice, Quote, ServiceRecord } from '../../types'
 import { Button, Card, PageHeader, Spinner, StatusBadge } from '../../components/ui'
 import { BackIcon, BankIcon, MailIcon } from '../../components/Icons'
@@ -23,10 +23,10 @@ export default function CustomerDetail() {
   useEffect(() => {
     if (!id) return
     Promise.all([
-      supabase.from('customers').select('*').eq('id', id).single(),
-      supabase.from('quotes').select('*').eq('customer_id', id).order('created_at', { ascending: false }),
-      supabase.from('invoices').select('*').eq('customer_id', id).order('created_at', { ascending: false }),
-      supabase.from('service_records').select('*').eq('customer_id', id).order('next_due_date'),
+      db.from('customers').select('*').eq('id', id).single(),
+      db.from('quotes').select('*').eq('customer_id', id).order('created_at', { ascending: false }),
+      db.from('invoices').select('*').eq('customer_id', id).order('created_at', { ascending: false }),
+      db.from('service_records').select('*').eq('customer_id', id).order('next_due_date'),
     ]).then(([c, q, i, s]) => {
       setCustomer(c.data as Customer)
       setQuotes((q.data as Quote[]) ?? [])

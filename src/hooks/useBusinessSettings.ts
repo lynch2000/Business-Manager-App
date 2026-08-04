@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/db'
 import { useAuth } from '../context/AuthContext'
 import type { BusinessSettings } from '../types'
 
@@ -11,12 +11,12 @@ export function useBusinessSettings() {
   const refresh = useCallback(async () => {
     if (!user) return
     setLoading(true)
-    const { data, error } = await supabase.from('business_settings').select('*').eq('user_id', user.id).maybeSingle()
+    const { data, error } = await db.from('business_settings').select('*').eq('user_id', user.id).maybeSingle()
 
     if (!error && data) {
       setSettings(data as BusinessSettings)
     } else if (!error && !data) {
-      const { data: created } = await supabase
+      const { data: created } = await db
         .from('business_settings')
         .insert({ user_id: user.id, business_name: 'Lynch Heating & Cooling' })
         .select('*')
@@ -32,7 +32,7 @@ export function useBusinessSettings() {
 
   async function save(patch: Partial<BusinessSettings>) {
     if (!settings) return
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('business_settings')
       .update(patch)
       .eq('id', settings.id)

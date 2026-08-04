@@ -1,0 +1,19 @@
+name = "hvac-business-manager"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-01-01"
+
+# Created by `wrangler d1 create hvac-business-manager-db` — paste the
+# database_id it prints below. See README.md.
+[[d1_databases]]
+binding = "DB"
+database_name = "hvac-business-manager-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Created by `wrangler r2 bucket create hvac-business-manager-files`.
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "hvac-business-manager-files"
+
+# Secrets (JWT_SECRET, FILE_SIGNING_SECRET, RESEND_API_KEY, FROM_EMAIL,
+# ANTHROPIC_API_KEY) are set with `wrangler pages secret put <NAME>` rather
+# than here, since this file is committed to git.

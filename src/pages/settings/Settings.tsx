@@ -4,7 +4,7 @@ import { useBusinessSettings } from '../../hooks/useBusinessSettings'
 import { Button, Field, Input, PageHeader, Spinner } from '../../components/ui'
 import { BackIcon } from '../../components/Icons'
 import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { storage } from '../../lib/storage'
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -53,9 +53,9 @@ export default function Settings() {
     if (!file || !settings) return
     setLogoUploading(true)
     const path = `${settings.user_id}/logo-${Date.now()}.${file.name.split('.').pop()}`
-    const { error } = await supabase.storage.from('logos').upload(path, file, { upsert: true })
+    const { error } = await storage.from('logos').upload(path, file, { contentType: file.type })
     if (!error) {
-      const { data } = supabase.storage.from('logos').getPublicUrl(path)
+      const { data } = storage.from('logos').getPublicUrl(path)
       await save({ logo_url: data.publicUrl })
     }
     setLogoUploading(false)

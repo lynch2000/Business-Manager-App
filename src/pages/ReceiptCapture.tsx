@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/db'
+import { storage } from '../lib/storage'
 import { useAuth } from '../context/AuthContext'
 import { processReceiptFile } from '../lib/image'
 import { scanReceipt } from '../lib/receiptScan'
@@ -57,7 +58,7 @@ export default function ReceiptCapture() {
 
       const ext = isPdf ? 'pdf' : 'jpg'
       const path = `${user.id}/${Date.now()}.${ext}`
-      const { error: uploadError } = await supabase.storage.from('receipts').upload(path, blob, { contentType: mimeType })
+      const { error: uploadError } = await storage.from('receipts').upload(path, blob, { contentType: mimeType })
       if (!uploadError) setReceiptPath(path)
 
       try {
@@ -92,7 +93,7 @@ export default function ReceiptCapture() {
 
     const { error } =
       destination === 'expense'
-        ? await supabase.from('expenses').insert({
+        ? await db.from('expenses').insert({
             user_id: user.id,
             vendor: vendor || 'Unknown',
             category,
@@ -102,7 +103,7 @@ export default function ReceiptCapture() {
             receipt_path: receiptPath,
             notes: notes || null,
           })
-        : await supabase.from('creditors').insert({
+        : await db.from('creditors').insert({
             user_id: user.id,
             supplier_name: vendor || 'Unknown',
             description: notes || null,

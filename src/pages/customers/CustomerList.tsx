@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
 import { useAuth } from '../../context/AuthContext'
 import type { Customer } from '../../types'
 import { Card, EmptyState, PageHeader, Spinner, Button, Input } from '../../components/ui'
@@ -14,7 +14,7 @@ export default function CustomerList() {
 
   useEffect(() => {
     if (!user) return
-    supabase
+    db
       .from('customers')
       .select('*')
       .eq('user_id', user.id)

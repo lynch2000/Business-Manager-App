@@ -1,34 +1,33 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router'
 import { useAuth } from '../context/AuthContext'
-import { Button, Field, Input } from '../components/ui'
-import { isSupabaseConfigured } from '../lib/supabase'
+import { Button, Field, Input, Spinner } from '../components/ui'
+import { apiJson } from '../lib/api'
 import logoWordmark from '../assets/logo-wordmark.png'
 
 export default function Login() {
   const { session, signIn, signUp } = useAuth()
-  const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn')
+  const [needsSetup, setNeedsSetup] = useState<boolean | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    apiJson<{ needsSetup: boolean }>('/api/auth/status').then(({ data }) => {
+      setNeedsSetup(data?.needsSetup ?? false)
+    })
+  }, [])
 
   if (session) return <Navigate to="/" replace />
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    setInfo(null)
     setBusy(true)
-    const result = mode === 'signIn' ? await signIn(email, password) : await signUp(email, password)
+    const result = needsSetup ? await signUp(email, password) : await signIn(email, password)
     setBusy(false)
-    if (result.error) {
-      setError(result.error)
-    } else if (mode === 'signUp') {
-      setInfo('Account created. Check your email to confirm, then sign in.')
-      setMode('signIn')
-    }
+    if (result.error) setError(result.error)
   }
 
   return (
@@ -37,46 +36,39 @@ export default function Login() {
         <img src={logoWordmark} alt="Lynch Heating & Cooling" className="h-14 w-auto" />
       </div>
 
-      {!isSupabaseConfigured && (
-        <div className="mb-4 w-full max-w-sm rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-          Supabase isn't configured yet. Add <code>VITE_SUPABASE_URL</code> and{' '}
-          <code>VITE_SUPABASE_ANON_KEY</code> to a <code>.env.local</code> file — see README.md.
-        </div>
+      {needsSetup === null ? (
+        <Spinner />
+      ) : (
+        <>
+          {needsSetup && (
+            <div className="mb-4 w-full max-w-sm rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">
+              First time here — set up your account to get started.
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
+            <Field label="Email">
+              <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+            </Field>
+            <Field label="Password">
+              <Input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete={needsSetup ? 'new-password' : 'current-password'}
+              />
+            </Field>
+
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
+            <Button type="submit" className="w-full" disabled={busy}>
+              {busy ? 'Please wait…' : needsSetup ? 'Create account' : 'Sign in'}
+            </Button>
+          </form>
+        </>
       )}
-
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <Field label="Email">
-          <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-        </Field>
-        <Field label="Password">
-          <Input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
-          />
-        </Field>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {info && <p className="text-sm text-green-600">{info}</p>}
-
-        <Button type="submit" className="w-full" disabled={busy}>
-          {mode === 'signIn' ? 'Sign in' : 'Create account'}
-        </Button>
-      </form>
-
-      <button
-        className="mt-4 text-sm text-brand-600"
-        onClick={() => {
-          setMode(mode === 'signIn' ? 'signUp' : 'signIn')
-          setError(null)
-          setInfo(null)
-        }}
-      >
-        {mode === 'signIn' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-      </button>
     </div>
   )
 }

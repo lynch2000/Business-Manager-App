@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { apiFetch } from './api'
 
 export interface SendEmailInput {
   to: string
@@ -8,13 +8,16 @@ export interface SendEmailInput {
 }
 
 /**
- * Sends via the `send-email` Supabase Edge Function (Resend). Throws if the
- * function isn't deployed/configured yet — callers should fall back to a
- * mailto: link so the app is usable before that setup is done.
+ * Sends via the `/api/send-email` Pages Function (Resend). Throws if the
+ * function isn't configured yet — callers should fall back to a mailto:
+ * link so the app is usable before that setup is done.
  */
 export async function sendEmail(input: SendEmailInput): Promise<void> {
-  const { error } = await supabase.functions.invoke('send-email', { body: input })
-  if (error) throw error
+  const res = await apiFetch('/api/send-email', { method: 'POST', body: JSON.stringify(input) })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error((body as { error?: string }).error ?? 'Failed to send email')
+  }
 }
 
 export function buildMailto(to: string, subject: string, body: string): string {

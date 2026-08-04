@@ -1,10 +1,14 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { Session, User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { apiJson, getToken, setToken } from '../lib/api'
+
+export interface AppUser {
+  id: string
+  email: string
+}
 
 interface AuthContextValue {
-  session: Session | null
-  user: User | null
+  session: { user: AppUser } | null
+  user: AppUser | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signUp: (email: string, password: string) => Promise<{ error: string | null }>
@@ -14,40 +18,54 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
+    async function restore() {
+      if (!getToken()) {
+        setLoading(false)
+        return
+      }
+      const { data, error } = await apiJson<{ user: AppUser }>('/api/auth/me')
+      if (!error && data) setUser(data.user)
+      else setToken(null)
       setLoading(false)
-    })
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession)
-    })
-
-    return () => listener.subscription.unsubscribe()
+    }
+    restore()
   }, [])
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
+    const { data, error } = await apiJson<{ token: string; user: AppUser }>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+    if (error || !data) return { error: error?.message ?? 'Sign in failed' }
+    setToken(data.token)
+    setUser(data.user)
+    return { error: null }
   }
 
   async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password })
-    return { error: error?.message ?? null }
+    const { data, error } = await apiJson<{ token: string; user: AppUser }>('/api/auth/setup', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+    if (error || !data) return { error: error?.message ?? 'Setup failed' }
+    setToken(data.token)
+    setUser(data.user)
+    return { error: null }
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
+    setToken(null)
+    setUser(null)
   }
 
+  const session = user ? { user } : null
+
   return (
-    <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, loading, signIn, signUp, signOut }}
-    >
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

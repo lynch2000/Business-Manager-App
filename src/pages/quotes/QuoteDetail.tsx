@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
+import { nextDocumentNumber } from '../../lib/documentNumber'
 import { useBusinessSettings } from '../../hooks/useBusinessSettings'
 import type { Customer, Quote, QuoteItem } from '../../types'
 import { Button, Card, PageHeader, Select, Spinner, StatusBadge } from '../../components/ui'
@@ -24,8 +25,8 @@ export default function QuoteDetail() {
   async function load() {
     if (!id) return
     const [q, i] = await Promise.all([
-      supabase.from('quotes').select('*, customer:customers(*)').eq('id', id).single(),
-      supabase.from('quote_items').select('*').eq('quote_id', id).order('sort_order'),
+      db.from('quotes').select('*, customer:customers(*)').eq('id', id).single(),
+      db.from('quote_items').select('*').eq('quote_id', id).order('sort_order'),
     ])
     setQuote(q.data as Quote)
     setCustomer((q.data as Quote)?.customer as Customer)
@@ -79,7 +80,7 @@ export default function QuoteDetail() {
       mailtoBody: `Hi ${customer.name},\n\nPlease find attached quotation ${quote.quote_number} for ${formatCurrency(quote.total)}.`,
     })
     if (result.method === 'email') {
-      await supabase.from('quotes').update({ status: 'sent' }).eq('id', quote.id)
+      await db.from('quotes').update({ status: 'sent' }).eq('id', quote.id)
       setSendMsg('Quote emailed to customer.')
       load()
     } else if (result.method === 'share') {
@@ -92,17 +93,17 @@ export default function QuoteDetail() {
 
   async function handleStatusChange(status: Quote['status']) {
     if (!quote) return
-    await supabase.from('quotes').update({ status }).eq('id', quote.id)
+    await db.from('quotes').update({ status }).eq('id', quote.id)
     load()
   }
 
   async function handleConvertToInvoice() {
     if (!quote) return
     setConverting(true)
-    const { data: numberData } = await supabase.rpc('next_document_number', { p_doc_type: 'invoice' })
+    const numberData = await nextDocumentNumber('invoice')
     const dueDate = new Date()
     dueDate.setDate(dueDate.getDate() + 14)
-    const { data: invoice, error } = await supabase
+    const { data: invoice, error } = await db
       .from('invoices')
       .insert({
         user_id: quote.user_id,
@@ -130,7 +131,7 @@ export default function QuoteDetail() {
         line_total: it.line_total,
         sort_order: it.sort_order,
       }))
-      if (rows.length) await supabase.from('invoice_items').insert(rows)
+      if (rows.length) await db.from('invoice_items').insert(rows)
       navigate(`/invoices/${invoice.id}`)
     }
     setConverting(false)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/db'
 import { useAuth } from '../context/AuthContext'
 import type { Customer } from '../types'
 import { Field, Select } from './ui'
@@ -17,7 +17,7 @@ export default function CustomerSelect({
 
   useEffect(() => {
     if (!user) return
-    supabase
+    db
       .from('customers')
       .select('*')
       .eq('user_id', user.id)

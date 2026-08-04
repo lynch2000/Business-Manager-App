@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
+import { storage } from '../../lib/storage'
 import { useAuth } from '../../context/AuthContext'
 import type { Creditor, Invoice } from '../../types'
 import { Button, Card, EmptyState, Field, Input, PageHeader, Spinner, StatusBadge, Textarea } from '../../components/ui'
@@ -20,13 +21,13 @@ export default function Accounts() {
   async function load() {
     if (!user) return
     const [inv, cr] = await Promise.all([
-      supabase
+      db
         .from('invoices')
         .select('*, customer:customers(*)')
         .eq('user_id', user.id)
         .in('status', ['sent', 'partially_paid', 'overdue', 'draft'])
         .order('due_date'),
-      supabase.from('creditors').select('*').eq('user_id', user.id).order('due_date'),
+      db.from('creditors').select('*').eq('user_id', user.id).order('due_date'),
     ])
     setInvoices(((inv.data as Invoice[]) ?? []).filter((i) => i.total - i.amount_paid > 0))
     const creditorRows = (cr.data as Creditor[]) ?? []
@@ -35,7 +36,7 @@ export default function Accounts() {
 
     const paths = creditorRows.map((c) => c.receipt_path).filter((p): p is string => Boolean(p))
     if (paths.length) {
-      const { data: signed } = await supabase.storage.from('receipts').createSignedUrls(paths, 3600)
+      const { data: signed } = await storage.from('receipts').createSignedUrls(paths, 3600)
       const map: Record<string, string> = {}
       signed?.forEach((s) => {
         if (s.signedUrl && s.path) map[s.path] = s.signedUrl
@@ -53,7 +54,7 @@ export default function Accounts() {
   const totalIOwe = round2(creditors.filter((c) => c.status === 'unpaid').reduce((sum, c) => sum + c.amount, 0))
 
   async function markCreditorPaid(id: string) {
-    await supabase.from('creditors').update({ status: 'paid', paid_date: new Date().toISOString().slice(0, 10) }).eq('id', id)
+    await db.from('creditors').update({ status: 'paid', paid_date: new Date().toISOString().slice(0, 10) }).eq('id', id)
     load()
   }
 
@@ -186,7 +187,7 @@ function CreditorForm({ userId, onSaved }: { userId: string; onSaved: () => void
     e.preventDefault()
     if (!supplierName || !amount) return
     setSaving(true)
-    await supabase.from('creditors').insert({
+    await db.from('creditors').insert({
       user_id: userId,
       supplier_name: supplierName,
       description: description || null,

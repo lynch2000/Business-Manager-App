@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
 import { useAuth } from '../../context/AuthContext'
 import type { ServiceRecord } from '../../types'
 import { Card, EmptyState, PageHeader, Spinner, Button, StatusBadge } from '../../components/ui'
@@ -16,7 +16,7 @@ export default function ServiceReminders() {
 
   useEffect(() => {
     if (!user) return
-    supabase
+    db
       .from('service_records')
       .select('*, customer:customers(*)')
       .eq('user_id', user.id)

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
+import { storage } from '../../lib/storage'
 import type { Expense, ExpenseCategory } from '../../types'
 import { EXPENSE_CATEGORIES } from '../../types'
 import { Button, Card, Field, Input, PageHeader, Select, Spinner, Textarea } from '../../components/ui'
@@ -24,7 +25,7 @@ export default function ExpenseDetail() {
 
   useEffect(() => {
     if (!id) return
-    supabase
+    db
       .from('expenses')
       .select('*')
       .eq('id', id)
@@ -41,7 +42,7 @@ export default function ExpenseDetail() {
           setNotes(e.notes ?? '')
 
           if (e.receipt_path) {
-            const { data: signed } = await supabase.storage.from('receipts').createSignedUrl(e.receipt_path, 3600)
+            const { data: signed } = await storage.from('receipts').createSignedUrl(e.receipt_path, 3600)
             if (signed) setPhotoUrl(signed.signedUrl)
           }
         }
@@ -53,7 +54,7 @@ export default function ExpenseDetail() {
     e.preventDefault()
     if (!expense) return
     setSaving(true)
-    await supabase
+    await db
       .from('expenses')
       .update({
         vendor,
@@ -71,8 +72,8 @@ export default function ExpenseDetail() {
   async function handleDelete() {
     if (!expense || !confirm('Delete this expense?')) return
     setDeleting(true)
-    if (expense.receipt_path) await supabase.storage.from('receipts').remove([expense.receipt_path])
-    await supabase.from('expenses').delete().eq('id', expense.id)
+    if (expense.receipt_path) await storage.from('receipts').remove([expense.receipt_path])
+    await db.from('expenses').delete().eq('id', expense.id)
     setDeleting(false)
     navigate('/expenses')
   }

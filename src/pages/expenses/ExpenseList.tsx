@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
+import { storage } from '../../lib/storage'
 import { useAuth } from '../../context/AuthContext'
 import type { Expense } from '../../types'
 import { Button, Card, EmptyState, PageHeader, Spinner } from '../../components/ui'
@@ -16,7 +17,7 @@ export default function ExpenseList() {
 
   useEffect(() => {
     if (!user) return
-    supabase
+    db
       .from('expenses')
       .select('*')
       .eq('user_id', user.id)
@@ -28,7 +29,7 @@ export default function ExpenseList() {
 
         const paths = rows.map((r) => r.receipt_path).filter((p): p is string => Boolean(p))
         if (paths.length) {
-          const { data: signed } = await supabase.storage.from('receipts').createSignedUrls(paths, 3600)
+          const { data: signed } = await storage.from('receipts').createSignedUrls(paths, 3600)
           const map: Record<string, string> = {}
           signed?.forEach((s) => {
             if (s.signedUrl && s.path) map[s.path] = s.signedUrl

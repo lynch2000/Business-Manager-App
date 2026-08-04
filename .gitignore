@@ -12,9 +12,9 @@ dist
 dist-ssr
 *.local
 
-# Supabase CLI local dev
-supabase/.branches
-supabase/.temp
+# Cloudflare Wrangler local dev
+.wrangler
+.dev.vars
 
 # Editor directories and files
 .vscode/*

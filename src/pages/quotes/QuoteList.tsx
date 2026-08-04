@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
 import { useAuth } from '../../context/AuthContext'
 import type { Quote } from '../../types'
 import { Card, EmptyState, PageHeader, Spinner, Button, StatusBadge } from '../../components/ui'
@@ -14,7 +14,7 @@ export default function QuoteList() {
 
   useEffect(() => {
     if (!user) return
-    supabase
+    db
       .from('quotes')
       .select('*, customer:customers(*)')
       .eq('user_id', user.id)

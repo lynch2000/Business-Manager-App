@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
+import { nextDocumentNumber } from '../../lib/documentNumber'
 import { useAuth } from '../../context/AuthContext'
 import { useBusinessSettings } from '../../hooks/useBusinessSettings'
 import type { Quote, QuoteItem } from '../../types'
@@ -34,8 +35,8 @@ export default function QuoteForm() {
   useEffect(() => {
     if (!id) return
     Promise.all([
-      supabase.from('quotes').select('*').eq('id', id).single(),
-      supabase.from('quote_items').select('*').eq('quote_id', id).order('sort_order'),
+      db.from('quotes').select('*').eq('id', id).single(),
+      db.from('quote_items').select('*').eq('quote_id', id).order('sort_order'),
     ]).then(([q, i]) => {
       const quote = q.data as Quote
       if (quote) {
@@ -77,11 +78,11 @@ export default function QuoteForm() {
     let quoteId = id
 
     if (isEdit) {
-      await supabase.from('quotes').update(payload).eq('id', id)
-      await supabase.from('quote_items').delete().eq('quote_id', id)
+      await db.from('quotes').update(payload).eq('id', id)
+      await db.from('quote_items').delete().eq('quote_id', id)
     } else {
-      const { data: numberData } = await supabase.rpc('next_document_number', { p_doc_type: 'quote' })
-      const { data, error } = await supabase
+      const numberData = await nextDocumentNumber('quote')
+      const { data, error } = await db
         .from('quotes')
         .insert({ ...payload, user_id: user.id, quote_number: numberData ?? `Q-${Date.now()}` })
         .select('id')
@@ -104,7 +105,7 @@ export default function QuoteForm() {
         sort_order: index,
       }))
 
-    if (itemRows.length) await supabase.from('quote_items').insert(itemRows)
+    if (itemRows.length) await db.from('quote_items').insert(itemRows)
 
     setSaving(false)
     navigate(`/quotes/${quoteId}`)

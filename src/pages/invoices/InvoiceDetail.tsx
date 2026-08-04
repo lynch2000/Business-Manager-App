@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { supabase } from '../../lib/supabase'
+import { db } from '../../lib/db'
 import { useBusinessSettings } from '../../hooks/useBusinessSettings'
 import type { Customer, Invoice, InvoiceItem, Payment, PaymentMethod } from '../../types'
 import { Button, Card, Field, Input, PageHeader, Select, Spinner, StatusBadge } from '../../components/ui'
@@ -28,9 +28,9 @@ export default function InvoiceDetail() {
   async function load() {
     if (!id) return
     const [inv, i, p] = await Promise.all([
-      supabase.from('invoices').select('*, customer:customers(*)').eq('id', id).single(),
-      supabase.from('invoice_items').select('*').eq('invoice_id', id).order('sort_order'),
-      supabase.from('payments').select('*').eq('invoice_id', id).order('payment_date', { ascending: false }),
+      db.from('invoices').select('*, customer:customers(*)').eq('id', id).single(),
+      db.from('invoice_items').select('*').eq('invoice_id', id).order('sort_order'),
+      db.from('payments').select('*').eq('invoice_id', id).order('payment_date', { ascending: false }),
     ])
     setInvoice(inv.data as Invoice)
     setCustomer((inv.data as Invoice)?.customer as Customer)
@@ -88,7 +88,7 @@ export default function InvoiceDetail() {
       mailtoBody: `Hi ${customer.name},\n\nPlease find attached invoice ${invoice.invoice_number} for ${formatCurrency(invoice.total)}, due ${formatDate(invoice.due_date)}.`,
     })
     if (result.method === 'email') {
-      if (invoice.status === 'draft') await supabase.from('invoices').update({ status: 'sent' }).eq('id', invoice.id)
+      if (invoice.status === 'draft') await db.from('invoices').update({ status: 'sent' }).eq('id', invoice.id)
       setSendMsg('Invoice emailed to customer.')
       load()
     } else if (result.method === 'share') {
@@ -106,7 +106,7 @@ export default function InvoiceDetail() {
     if (!amount || amount <= 0) return
     setRecordingPayment(true)
 
-    await supabase.from('payments').insert({
+    await db.from('payments').insert({
       user_id: invoice.user_id,
       invoice_id: invoice.id,
       amount,
@@ -115,7 +115,7 @@ export default function InvoiceDetail() {
 
     const newAmountPaid = round2(invoice.amount_paid + amount)
     const newStatus = newAmountPaid >= invoice.total ? 'paid' : 'partially_paid'
-    await supabase.from('invoices').update({ amount_paid: newAmountPaid, status: newStatus }).eq('id', invoice.id)
+    await db.from('invoices').update({ amount_paid: newAmountPaid, status: newStatus }).eq('id', invoice.id)
 
     setPaymentAmount('')
     setRecordingPayment(false)
