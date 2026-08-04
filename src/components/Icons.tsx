@@ -118,6 +118,28 @@ export const BellIcon = (p: IconProps) => (
   </svg>
 )
 
+export const CameraIcon = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+    <circle cx="12" cy="14" r="3.5" />
+  </svg>
+)
+
+export const ReceiptIcon = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <path d="M6 3h12v18l-2.5-1.6L13 21l-2.5-1.6L8 21l-2-1.6z" />
+    <path d="M9 8h6M9 11.5h6M9 15h4" />
+  </svg>
+)
+
+export const ImageIcon = (p: IconProps) => (
+  <svg {...base} {...p}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+    <circle cx="8.5" cy="9.5" r="1.5" />
+    <path d="m5 17 4.5-5 3.5 4 2.5-3 4.5 4" />
+  </svg>
+)
+
 export const LogoutIcon = (p: IconProps) => (
   <svg {...base} {...p}>
     <path d="M9 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h4" />

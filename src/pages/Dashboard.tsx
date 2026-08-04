@@ -2,22 +2,25 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import type { Invoice, ServiceRecord } from '../types'
+import type { Expense, Invoice, ServiceRecord } from '../types'
 import { Card, PageHeader, Spinner, StatusBadge } from '../components/ui'
 import { formatCurrency, formatDate, round2 } from '../lib/currency'
 import { dueStatus } from '../lib/serviceDue'
-import { BellIcon, AccountsIcon } from '../components/Icons'
+import { BellIcon, AccountsIcon, ReceiptIcon } from '../components/Icons'
 
 export default function Dashboard() {
   const { user } = useAuth()
   const [outstandingInvoices, setOutstandingInvoices] = useState<Invoice[]>([])
   const [dueServices, setDueServices] = useState<ServiceRecord[]>([])
+  const [monthExpenseTotal, setMonthExpenseTotal] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
     const in30Days = new Date()
     in30Days.setDate(in30Days.getDate() + 30)
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
 
     Promise.all([
       supabase
@@ -32,9 +35,15 @@ export default function Dashboard() {
         .eq('user_id', user.id)
         .lte('next_due_date', in30Days.toISOString().slice(0, 10))
         .order('next_due_date'),
-    ]).then(([inv, svc]) => {
+      supabase
+        .from('expenses')
+        .select('amount')
+        .eq('user_id', user.id)
+        .gte('expense_date', monthStart),
+    ]).then(([inv, svc, exp]) => {
       setOutstandingInvoices((((inv.data as Invoice[]) ?? []).filter((i) => i.total - i.amount_paid > 0)).slice(0, 5))
       setDueServices(((svc.data as ServiceRecord[]) ?? []).slice(0, 5))
+      setMonthExpenseTotal(round2(((exp.data as Pick<Expense, 'amount'>[]) ?? []).reduce((sum, e) => sum + e.amount, 0)))
       setLoading(false)
     })
   }, [user])
@@ -49,18 +58,26 @@ export default function Dashboard() {
         <Spinner />
       ) : (
         <>
-          <Link to="/accounts">
-            <Card className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AccountsIcon width={22} height={22} className="text-brand-600" />
+          <div className="mb-4 grid grid-cols-2 gap-3">
+            <Link to="/accounts">
+              <Card className="flex items-center gap-3">
+                <AccountsIcon width={22} height={22} className="text-brand-600 shrink-0" />
                 <div>
                   <p className="text-sm text-slate-500">Outstanding</p>
                   <p className="text-lg font-semibold text-slate-900">{formatCurrency(totalOwed)}</p>
                 </div>
-              </div>
-              <span className="text-slate-300">›</span>
-            </Card>
-          </Link>
+              </Card>
+            </Link>
+            <Link to="/expenses">
+              <Card className="flex items-center gap-3">
+                <ReceiptIcon width={22} height={22} className="text-brand-600 shrink-0" />
+                <div>
+                  <p className="text-sm text-slate-500">Expenses (mth)</p>
+                  <p className="text-lg font-semibold text-slate-900">{formatCurrency(monthExpenseTotal)}</p>
+                </div>
+              </Card>
+            </Link>
+          </div>
 
           <Section title="Servicing due soon" icon={<BellIcon width={18} height={18} className="text-brand-600" />}>
             {dueServices.length === 0 ? (

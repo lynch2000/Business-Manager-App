@@ -1,17 +1,19 @@
 # HVAC Business Manager
 
 A business management app for a heating & air conditioning company: customers,
-quotations, invoices, debtors/creditors, and service reminders — built as an
-installable web app (PWA) so it goes straight onto your iPhone home screen,
-with a clean data layer so it can be rebuilt as a native Swift app later
-without redesigning the backend.
+quotations, invoices, debtors/creditors, expenses/receipts, and service
+reminders — built as an installable web app (PWA) so it goes straight onto
+your iPhone home screen, with a clean data layer so it can be rebuilt as a
+native Swift app later without redesigning the backend.
 
 ## Stack
 
 - **Frontend**: React + TypeScript + Vite, Tailwind CSS, installable as a PWA
 - **Backend**: [Supabase](https://supabase.com) — Postgres database, auth, file
-  storage, and an Edge Function for sending email
+  storage, and Edge Functions for sending email and scanning receipts
 - **Email**: [Resend](https://resend.com), called from a Supabase Edge Function
+- **Receipt scanning**: [Claude](https://console.anthropic.com) vision, called
+  from a Supabase Edge Function
 - **PDFs**: generated on-device with jsPDF
 
 Because the backend is a plain Postgres database behind Supabase's REST API,
@@ -24,10 +26,11 @@ needed there.
    (pick a region close to Ireland, e.g. `eu-west-1`).
 2. In **Project Settings → API**, copy the **Project URL** and **anon public
    key**.
-3. Open the **SQL Editor** and run the contents of
-   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-   This creates all tables, row-level security policies, the document
-   numbering function, and a `logos` storage bucket.
+3. Open the **SQL Editor** and run, in order, the contents of
+   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) and
+   [`supabase/migrations/0002_expenses.sql`](supabase/migrations/0002_expenses.sql).
+   Together these create all tables, row-level security policies, the document
+   numbering function, and the `logos` and `receipts` storage buckets.
    - Alternatively, if you have the [Supabase CLI](https://supabase.com/docs/guides/cli)
      installed: `supabase link --project-ref <your-ref>` then `supabase db push`.
 4. In **Authentication → Providers**, email/password sign-in is enabled by
@@ -82,7 +85,26 @@ bank details" fall back to the iOS/Safari share sheet (pick Mail, WhatsApp,
 etc. with the PDF attached) or, as a last resort, download the PDF and open
 your mail app with the message pre-filled so you can attach it yourself.
 
-## 4. Get it on your iPhone
+## 4. Set up receipt scanning (Expenses)
+
+Snapping a photo of a receipt/docket in **Expenses → Add expense** uploads it
+to Supabase Storage and, if configured, sends it to Claude to automatically
+read the vendor, date, amount, VAT, and a likely category — you review and
+correct before saving, so a misread number never sneaks into your records.
+
+1. Create an API key at [console.anthropic.com](https://console.anthropic.com).
+2. Deploy the function and set its secret:
+
+   ```bash
+   supabase functions deploy parse-receipt
+   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+   ```
+
+**If you skip this step**, photo capture and storage still work — the app
+just leaves the vendor/amount/date fields blank for you to fill in by hand
+instead of pre-filling them.
+
+## 5. Get it on your iPhone
 
 1. Deploy the built app somewhere with HTTPS — [Vercel](https://vercel.com) or
    [Netlify](https://netlify.com) both have a free tier that works well with
@@ -104,11 +126,14 @@ it keeps working offline for pages you've already loaded.
 | `quotes` / `quote_items`     | Quotations, with line items and status (draft/sent/accepted/…) |
 | `invoices` / `invoice_items` | Invoices, with line items and status                    |
 | `payments`          | Payments recorded against an invoice (part-payments supported) |
-| `creditors`         | Bills you owe to suppliers                                     |
+| `creditors`         | Unpaid bills you owe to suppliers                               |
+| `expenses`           | Receipts/dockets for things already paid for, optionally with a photo |
 | `service_records`   | Servicing history per customer, with an auto-computed next-due date |
 
 Every table is scoped by `user_id` with row-level security, so your data is
-private to your login.
+private to your login. Receipt photos live in a private `receipts` storage
+bucket (unlike the public `logos` bucket) and are only ever viewed via
+short-lived signed URLs.
 
 ## Roadmap ideas (not built yet)
 

@@ -1,10 +1,11 @@
 import { Link } from 'react-router'
 import { PageHeader, Card } from '../components/ui'
-import { AccountsIcon, WrenchIcon, SettingsIcon, LogoutIcon } from '../components/Icons'
+import { AccountsIcon, ReceiptIcon, WrenchIcon, SettingsIcon, LogoutIcon } from '../components/Icons'
 import { useAuth } from '../context/AuthContext'
 
 const items = [
   { to: '/accounts', label: 'Accounts (debtors & creditors)', icon: AccountsIcon },
+  { to: '/expenses', label: 'Expenses & receipts', icon: ReceiptIcon },
   { to: '/services', label: 'Servicing & reminders', icon: WrenchIcon },
   { to: '/settings', label: 'Business settings', icon: SettingsIcon },
 ]

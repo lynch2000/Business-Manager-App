@@ -2,6 +2,28 @@ export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired'
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'partially_paid' | 'overdue' | 'void'
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'cheque' | 'other'
 export type CreditorStatus = 'unpaid' | 'paid'
+export type ExpenseCategory =
+  | 'Materials & Parts'
+  | 'Fuel & Travel'
+  | 'Tools & Equipment'
+  | 'Subcontractors'
+  | 'Vehicle'
+  | 'Insurance'
+  | 'Office & Admin'
+  | 'Training'
+  | 'Other'
+
+export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
+  'Materials & Parts',
+  'Fuel & Travel',
+  'Tools & Equipment',
+  'Subcontractors',
+  'Vehicle',
+  'Insurance',
+  'Office & Admin',
+  'Training',
+  'Other',
+]
 
 export interface BusinessSettings {
   id: string
@@ -123,6 +145,20 @@ export interface Creditor {
   due_date: string | null
   status: CreditorStatus
   paid_date: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Expense {
+  id: string
+  user_id: string
+  vendor: string
+  category: ExpenseCategory
+  amount: number
+  vat_amount: number | null
+  expense_date: string
+  receipt_path: string | null
   notes: string | null
   created_at: string
   updated_at: string
