@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import type { Creditor, Invoice } from '../../types'
 import { Button, Card, EmptyState, Field, Input, PageHeader, Spinner, StatusBadge, Textarea } from '../../components/ui'
-import { BackIcon, PlusIcon } from '../../components/Icons'
+import { BackIcon, CameraIcon, PlusIcon, ReceiptIcon } from '../../components/Icons'
 import { formatCurrency, formatDate, round2 } from '../../lib/currency'
 
 export default function Accounts() {
@@ -13,6 +13,7 @@ export default function Accounts() {
   const [tab, setTab] = useState<'debtors' | 'creditors'>('debtors')
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [creditors, setCreditors] = useState<Creditor[]>([])
+  const [receiptUrls, setReceiptUrls] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [showCreditorForm, setShowCreditorForm] = useState(false)
 
@@ -28,8 +29,19 @@ export default function Accounts() {
       supabase.from('creditors').select('*').eq('user_id', user.id).order('due_date'),
     ])
     setInvoices(((inv.data as Invoice[]) ?? []).filter((i) => i.total - i.amount_paid > 0))
-    setCreditors((cr.data as Creditor[]) ?? [])
+    const creditorRows = (cr.data as Creditor[]) ?? []
+    setCreditors(creditorRows)
     setLoading(false)
+
+    const paths = creditorRows.map((c) => c.receipt_path).filter((p): p is string => Boolean(p))
+    if (paths.length) {
+      const { data: signed } = await supabase.storage.from('receipts').createSignedUrls(paths, 3600)
+      const map: Record<string, string> = {}
+      signed?.forEach((s) => {
+        if (s.signedUrl && s.path) map[s.path] = s.signedUrl
+      })
+      setReceiptUrls(map)
+    }
   }
 
   useEffect(() => {
@@ -105,9 +117,16 @@ export default function Accounts() {
         )
       ) : (
         <div>
-          <Button variant="secondary" className="mb-3 w-full" onClick={() => setShowCreditorForm((s) => !s)}>
-            <PlusIcon width={16} height={16} /> Add supplier bill
-          </Button>
+          <div className="mb-3 grid grid-cols-2 gap-3">
+            <Button variant="secondary" onClick={() => setShowCreditorForm((s) => !s)}>
+              <PlusIcon width={16} height={16} /> Add manually
+            </Button>
+            <Link to="/expenses/new?owed=1">
+              <Button variant="secondary" className="w-full">
+                <CameraIcon width={16} height={16} /> Scan a docket
+              </Button>
+            </Link>
+          </div>
 
           {showCreditorForm && (
             <CreditorForm
@@ -124,8 +143,15 @@ export default function Accounts() {
           ) : (
             <div className="space-y-2">
               {creditors.map((c) => (
-                <Card key={c.id} className="flex items-center justify-between">
-                  <div>
+                <Card key={c.id} className="flex items-center gap-3">
+                  {c.receipt_path && receiptUrls[c.receipt_path] ? (
+                    <a href={receiptUrls[c.receipt_path]} target="_blank" rel="noreferrer" className="shrink-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                        <ReceiptIcon width={18} height={18} />
+                      </div>
+                    </a>
+                  ) : null}
+                  <div className="flex-1">
                     <p className="font-medium text-slate-900">{c.supplier_name}</p>
                     <p className="text-sm text-slate-500">{c.description || 'No description'} · Due {formatDate(c.due_date)}</p>
                   </div>

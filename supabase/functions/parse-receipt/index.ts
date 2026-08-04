@@ -61,6 +61,13 @@ Deno.serve(async (req) => {
       return json({ error: 'imageBase64 and mimeType are required' }, 400)
     }
 
+    // PDFs (e.g. a supplier invoice uploaded from the Files app) go in as a
+    // document block; photos go in as an image block.
+    const isPdf = body.mimeType === 'application/pdf'
+    const fileBlock = isPdf
+      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: body.imageBase64 } }
+      : { type: 'image', source: { type: 'base64', media_type: body.mimeType, data: body.imageBase64 } }
+
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -77,7 +84,7 @@ Deno.serve(async (req) => {
           {
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: body.mimeType, data: body.imageBase64 } },
+              fileBlock,
               { type: 'text', text: 'Extract the expense details from this receipt as JSON.' },
             ],
           },

@@ -5,6 +5,23 @@ export interface ProcessedImage {
 }
 
 /**
+ * Prepares a receipt file for upload/scanning. Photos get downscaled (a
+ * full-resolution phone photo is unnecessary for reading a receipt and just
+ * costs upload time); PDFs — e.g. a supplier invoice picked from the Files
+ * app — are passed through as-is since there's nothing to rasterize.
+ */
+export async function processReceiptFile(file: File): Promise<ProcessedImage> {
+  if (file.type === 'application/pdf') {
+    const base64 = await blobToBase64(file)
+    return { blob: file, base64, mimeType: 'application/pdf' }
+  }
+  if (file.type.startsWith('image/')) {
+    return downscaleImage(file)
+  }
+  throw new Error(`Unsupported file type: ${file.type || 'unknown'}`)
+}
+
+/**
  * Downscales a photo client-side before it's uploaded or sent for scanning —
  * a full-resolution phone photo is unnecessary for reading a receipt and
  * just costs upload time and edge-function payload size.

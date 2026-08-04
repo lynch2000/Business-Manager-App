@@ -146,6 +146,7 @@ export interface Creditor {
   status: CreditorStatus
   paid_date: string | null
   notes: string | null
+  receipt_path: string | null
   created_at: string
   updated_at: string
 }

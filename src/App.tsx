@@ -16,8 +16,8 @@ import InvoiceForm from './pages/invoices/InvoiceForm'
 import InvoiceDetail from './pages/invoices/InvoiceDetail'
 import Accounts from './pages/accounts/Accounts'
 import ExpenseList from './pages/expenses/ExpenseList'
-import ExpenseCapture from './pages/expenses/ExpenseCapture'
 import ExpenseDetail from './pages/expenses/ExpenseDetail'
+import ReceiptCapture from './pages/ReceiptCapture'
 import ServiceReminders from './pages/services/ServiceReminders'
 import ServiceForm from './pages/services/ServiceForm'
 import Settings from './pages/settings/Settings'
@@ -57,7 +57,7 @@ export default function App() {
             <Route path="/accounts" element={<Accounts />} />
 
             <Route path="/expenses" element={<ExpenseList />} />
-            <Route path="/expenses/new" element={<ExpenseCapture />} />
+            <Route path="/expenses/new" element={<ReceiptCapture />} />
             <Route path="/expenses/:id" element={<ExpenseDetail />} />
 
             <Route path="/services" element={<ServiceReminders />} />
